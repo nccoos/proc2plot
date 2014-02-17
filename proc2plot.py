@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Last modified:  Time-stamp: <2012-05-11 16:55:13 haines>
+# Last modified:  Time-stamp: <2014-02-04 13:32:11 haines>
 """Create plots from monthly netCDF data files
 
 This module plots different graphical products from different NCCOOS
@@ -12,6 +12,9 @@ requested platform, sensor, and month.
 :Processing steps:
   0. proc2plot auto or manual for platform, sensor, month
   1. 
+
+added spin cycle
+removed redundant functions that are in raw2proc module
 
 """
 
@@ -33,90 +36,9 @@ import numpy
 sys.path.append('/opt/env/haines/dataproc/raw2proc')
 del(sys)
 
+from raw2proc import *
 from procutil import *
-from ncutil import *
-
-
-def get_config(name):
-    """Usage Example >>>sensor_info = get_config('bogue_config_20060918.sensor_info')"""
-    components = name.split('.')
-    mod = __import__(components[0])
-    for comp in components[1:]:
-        attr = getattr(mod, comp)
-    return attr
-
-def find_configs(platform, yyyy_mm, config_dir=''):
-    """Find which configuration files for specified platform and month
-
-    :Parameters:
-       platform : string
-           Platfrom id to process (e.g. 'bogue')
-       yyyy_mm : string
-           Year and month of data to process (e.g. '2007_07')
-
-    :Returns:
-       cns : list of str
-           List of configurations that overlap with desired month
-           If empty [], no configs were found
-    """
-    import glob
-    # list of config files based on platform
-    configs = glob.glob(os.path.join(config_dir, platform + '_config_*.py'))
-    configs.sort()
-    now_dt = datetime.utcnow()
-    now_dt.replace(microsecond=0)
-    # determine when month starts and ends
-    (prev_month, this_month, next_month) = find_months(yyyy_mm)
-    month_start_dt = this_month
-    month_end_dt = next_month - timedelta(seconds=1)
-    # print month_start_dt; print month_end_dt
-    # 
-    cns = []
-    for config in configs:
-        # datetime from filename 
-        cn = os.path.splitext(os.path.basename(config))[0]
-        cndt = filt_datetime(os.path.basename(config))
-        pi = get_config(cn+'.platform_info')
-        if pi['config_start_date']:
-            config_start_dt = filt_datetime(pi['config_start_date'])
-        elif pi['config_start_date'] == None:
-            config_start_dt = now_dt
-        if pi['config_end_date']:
-            config_end_dt = filt_datetime(pi['config_end_date'])
-        elif pi['config_end_date'] == None:
-            config_end_dt = now_dt
-        # 
-        if (config_start_dt <= month_start_dt or config_start_dt <= month_end_dt) and \
-               (config_end_dt >= month_start_dt or config_end_dt >= month_end_dt):
-            cns.append(cn)
-    return cns
-
-
-def find_active_configs(config_dir=''):
-    """Find which configuration files are active
-
-    :Returns:
-       cns : list of str
-           List of configurations that overlap with desired month
-           If empty [], no configs were found
-    """
-    import glob
-    # list of all config files 
-    configs = glob.glob(os.path.join(config_dir, '*_config_*.py'))
-    now_dt = datetime.utcnow()
-    now_dt.replace(microsecond=0)
-    # 
-    cns = []
-    for config in configs:
-        # datetime from filename 
-        cn = os.path.splitext(os.path.basename(config))[0]
-        cndt = filt_datetime(os.path.basename(config))
-        pi = get_config(cn+'.platform_info')
-        if pi['config_end_date'] == None:
-            cns.append(cn)
-    return cns
-
-        
+from ncutil import *        
 
 def proc2plot(proctype, platform=None, package=None, yyyy_mm=None):
     """
@@ -150,7 +72,7 @@ def proc2plot(proctype, platform=None, package=None, yyyy_mm=None):
         auto()
     elif proctype == 'manual':
         if platform and package and yyyy_mm:
-            print 'Processing in manually ...'
+            print 'Processing manually ...'
             print ' ...  platform id : %s' % platform
             print ' ... package name : %s' % package
             print ' ...        month : %s' % yyyy_mm
@@ -159,8 +81,22 @@ def proc2plot(proctype, platform=None, package=None, yyyy_mm=None):
         else:
             print 'proc2plot: Manual operation requires platform, package, and month'
             print "   >>> proc2plot(proctype='manual', platform='bogue', package='adcp', yyyy_mm='2007_07')"
+    elif proctype == 'spin':
+        if platform and package and yyyy_mm:
+            print 'Processing in spin-mode ...'
+            print ' ...  platform ids : %s' % platform
+            print ' ... package names : %s' % package
+            print ' ...        months : %s' % yyyy_mm
+            print ' ...   starting at : %s' % start_dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+            spin_list = create_spin_list(platform, package, yyyy_mm)
+            spin(spin_list)
+        else:
+            print "proc2plot: Spin operation requires platform(s), package(s), and month(s)"
+            print "   >>> proc2plot(proctype='spin', platform='b1', package='ALL', yyyy_mm='ALL')"
+            print "   >>> proc2plot(proctype='spin', platform='ALL', package='met', yyyy_mm='2011_11')"
+            print "   >>> proc2plot('spin', ['b1','b2'], ['ctd1', 'ctd2'], [datetime(2011,11,1), datetime(2012,4,1)])"
     else:
-        print 'proc2plot: requires either auto or manual operation'
+        print 'proc2plot: requires either auto or manual or sping operation'
 
 
 def auto():
@@ -220,6 +156,12 @@ def auto():
     else:
         print ' ... ... NOTE: No active platforms'
 
+def spin(spin_list):
+    """ wrapper to run manual() for multiple platforms, packages, and months"""
+    for item in spin_list:
+        platform, package, yyyy_mm = item
+        proc2plot('manual',platform, package, yyyy_mm)
+                            
 def manual(platform, package, yyyy_mm):
     """Process data for specified platform, sensor package, and month
 
