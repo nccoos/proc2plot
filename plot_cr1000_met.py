@@ -1,5 +1,5 @@
 #!/usr/bin/env /opt/env/haines/dataproc/bin/python
-# Last modified:  Time-stamp: <2013-12-05 14:13:16 haines>
+# Last modified:  Time-stamp: <2014-02-21 15:51:29 haines>
 """plot_cr1000_met"""
 
 import os
@@ -63,14 +63,6 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     dt_local = [e.astimezone(dateutil.tz.tzlocal()) for e in dt]
     dn = date2num(dt)
 
-    ap = nc.var('air_press')[:]
-    atemp = nc.var('air_temp')[:]
-    # dp = nc.var('dew_temp')[:]
-    rh = nc.var('rh')[:]
-    rain = nc.var('rain')[:]
-    psp = nc.var('psp')[:]
-    pir = nc.var('pir')[:]
-
     # last dt in data for labels
     dtu = dt[-1]
     dtl = dt_local[-1]
@@ -92,7 +84,8 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax = fig.add_subplot(6,1,1)
     axs = [ax]
 
-    (x, y) = procutil.addnan(dt, ap)
+    vn = 'air_press'
+    (x, y) = procutil.addnan(dt, nc.var(vn)[:])
     ibad = y <= -6999.
     y[ibad] = numpy.nan
 
@@ -129,8 +122,19 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax = fig.add_subplot(6,1,2)
     axs.append(ax)
 
+    vn = 'air_temp'
+    yo = nc.var(vn)[:]
+
+    vn = 'air_temp_std'
+    yy=nc.var(vn)[:]
+    (x, y1) = procutil.addnan(dt, yo+yy)
+    (x, y2) = procutil.addnan(dt, yo-yy)
+    l2, = ax.plot_date(x, y1, fmt='c-', alpha=0.5)
+    l2, = ax.plot_date(x, y2, fmt='c-', alpha=0.5)
+    l2.set_label('Std Dev')
+
     # ax.plot returns a list of lines, so unpack tuple
-    (x, y) = procutil.addnan(dt, atemp)
+    (x, y) = procutil.addnan(dt, yo)
     l1, = ax.plot_date(x, y, fmt='b-')
     l1.set_label('Air Temperature')
 
@@ -147,7 +151,8 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
 
     # legend
     ls1 = l1.get_label()
-    leg = ax.legend((l1,), (ls1,), loc='upper left')
+    ls2 = l2.get_label()
+    leg = ax.legend((l1,l2), (ls1,ls2), loc='upper left')
     ltext  = leg.get_texts()  # all the text.Text instance in the legend
     llines = leg.get_lines()  # all the lines.Line2D instance in the legend
     frame  = leg.get_frame()  # the patch.Rectangle instance surrounding the legend
@@ -161,9 +166,20 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     #
     ax = fig.add_subplot(6,1,3)
     axs.append(ax)
+ 
+    vn = 'rh'
+    yo = nc.var(vn)[:]
+
+    vn = 'rh_std'
+    yy=nc.var(vn)[:]
+    (x, y1) = procutil.addnan(dt, yo+yy)
+    (x, y2) = procutil.addnan(dt, yo-yy)
+    l2, = ax.plot_date(x, y1, fmt='c-', alpha=0.5)
+    l2, = ax.plot_date(x, y2, fmt='c-', alpha=0.5)
+    l2.set_label('Std Dev')
 
     # ax.plot returns a list of lines, so unpack tuple
-    (x, y) = procutil.addnan(dt, rh)
+    (x, y) = procutil.addnan(dt, yo)
     l1, = ax.plot_date(x, y, fmt='b-')
     l1.set_label('Relative Humidity (%)')
 
@@ -186,8 +202,10 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax = fig.add_subplot(6,1,4)
     axs.append(ax)
 
+    vn = 'rain'
+    yo = nc.var(vn)[:]
     # ax.plot returns a list of lines, so unpack tuple
-    (x, y) = procutil.addnan(dt, rain)
+    (x, y) = procutil.addnan(dt, yo)
     l1, = ax.plot_date(x, y, fmt='b-')
     l1.set_label('Precipitation')
 
@@ -218,8 +236,19 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax = fig.add_subplot(6,1,5)
     axs.append(ax)
 
+    vn = 'psp'
+    yo = nc.var(vn)[:]
+
+    vn = 'psp_std'
+    yy=nc.var(vn)[:]
+    (x, y1) = procutil.addnan(dt, yo+yy)
+    (x, y2) = procutil.addnan(dt, yo-yy)
+    l2, = ax.plot_date(x, y1, fmt='c-', alpha=0.5)
+    l2, = ax.plot_date(x, y2, fmt='c-', alpha=0.5)
+    l2.set_label('Std Dev')
+
     # ax.plot returns a list of lines, so unpack tuple
-    (x, y) = procutil.addnan(dt, psp)
+    (x, y) = procutil.addnan(dt, yo)
     l1, = ax.plot_date(x, y, fmt='b-')
     l1.set_label('Shortwave Radiation')
 
@@ -243,8 +272,19 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax = fig.add_subplot(6,1,6)
     axs.append(ax)
 
+    vn = 'pir'
+    yo = nc.var(vn)[:]
+
+    vn = 'pir_std'
+    yy=nc.var(vn)[:]
+    (x, y1) = procutil.addnan(dt, yo+yy)
+    (x, y2) = procutil.addnan(dt, yo-yy)
+    l2, = ax.plot_date(x, y1, fmt='c-', alpha=0.5)
+    l2, = ax.plot_date(x, y2, fmt='c-', alpha=0.5)
+    l2.set_label('Std Dev')
+
     # ax.plot returns a list of lines, so unpack tuple
-    (x, y) = procutil.addnan(dt, pir)
+    (x, y) = procutil.addnan(dt, yo)
     l1, = ax.plot_date(x, y, fmt='b-')
     l1.set_label('Long-wave Radiation')
 

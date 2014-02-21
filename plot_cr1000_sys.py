@@ -1,5 +1,5 @@
 #!/usr/bin/env /opt/env/haines/dataproc/bin/python
-# Last modified:  Time-stamp: <2014-02-18 13:15:11 haines>
+# Last modified:  Time-stamp: <2014-02-21 15:59:59 haines>
 """plot_cr1000_sys"""
 
 import os
@@ -90,7 +90,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
 
     # ax.plot returns a list of lines, so unpack tuple
     l1, = ax.plot_date(x, y, fmt='b-')
-    l1.set_label(nc.var(vn).long_name)
+    l1.set_label('Battery Min')
 
     vn = 'batt_max'
     (x, y) = procutil.addnan(dt, nc.var(vn)[:])
@@ -98,8 +98,8 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     # y[ibad] = numpy.nan
 
     # ax.plot returns a list of lines, so unpack tuple
-    l2, = ax.plot_date(x, y, fmt='c-')
-    l2.set_label(nc.var(vn).long_name)
+    l2, = ax.plot_date(x, y, fmt='k-', alpha=0.5)
+    l2.set_label('Battery Max')
     
     ax.set_ylabel('Battery\n ('+nc.var(vn).units+')')
 
@@ -107,9 +107,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ax.xaxis.set_label_position('top')
 
     # legend
-    ls1 = l1.get_label()
-    ls2 = l2.get_label()
-    leg = ax.legend((l1,l2), (ls1,ls2), loc='upper left')
+    leg = ax.legend((l1,l2), (l1.get_label(), l2.get_label()), loc='upper left')
     ltext  = leg.get_texts()  # all the text.Text instance in the legend
     llines = leg.get_lines()  # all the lines.Line2D instance in the legend
     frame  = leg.get_frame()  # the patch.Rectangle instance surrounding the legend

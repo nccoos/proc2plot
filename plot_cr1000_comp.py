@@ -1,5 +1,5 @@
 #!/usr/bin/env /opt/env/haines/dataproc/bin/python
-# Last modified:  Time-stamp: <2014-02-18 14:31:23 haines>
+# Last modified:  Time-stamp: <2014-02-21 16:02:13 haines>
 """plot_cr1000_comp"""
 
 import os
@@ -113,8 +113,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
 
     # legend
     ls1 = l1.get_label()
-    ls2 = l2.get_label()
-    leg = ax.legend((l1,l2), (ls1,ls2), loc='upper left')
+    leg = ax.legend((l1,), (ls1,), loc='upper left')
     ltext  = leg.get_texts()  # all the text.Text instance in the legend
     llines = leg.get_lines()  # all the lines.Line2D instance in the legend
     frame  = leg.get_frame()  # the patch.Rectangle instance surrounding the legend
@@ -134,10 +133,9 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     (x, y) = procutil.addnan(dt, yo)
     # ibad = y <= -6999.
     # y[ibad] = numpy.nan
-
     # ax.plot returns a list of lines, so unpack tuple
     l1, = ax.plot_date(x, y, fmt='b-')
-    l1.set_label(nc.var(vn).long_name)
+    l1.set_label('Pitch')
 
     vn = 'pitch_std'
     (x, y1) = procutil.addnan(dt, yo+nc.var(vn)[:])
@@ -155,6 +153,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     l3, = ax.plot_date(x, y, fmt='k-', alpha=0.5)
     l3.set_label('Maximum')
     
+    ax.axhline(y=0, color='k')
     ax.set_ylabel('PITCH\n ('+nc.var(vn).units+')')
     # ax.set_ylim(-20,20)
 
@@ -203,6 +202,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     l3, = ax.plot_date(x, y, fmt='k-', alpha=0.5)
     l3.set_label('Maximum')
     
+    ax.axhline(y=0, color='k')
     ax.set_ylabel('ROLL\n ('+nc.var(vn).units+')')
     # ax.set_ylim(-20,20)
 
@@ -210,7 +210,7 @@ def timeseries(pi, si, yyyy_mm, plot_type='latest'):
     ls1 = l1.get_label()
     ls2 = l2.get_label()
     ls3 = l3.get_label()
-    leg = ax.legend((l1,l2,l3), (ls1,ls2,ls3), loc='upper left')
+    leg = ax.legend((l1,), (ls1,), loc='upper left')
     ltext  = leg.get_texts()  # all the text.Text instance in the legend
     llines = leg.get_lines()  # all the lines.Line2D instance in the legend
     frame  = leg.get_frame()  # the patch.Rectangle instance surrounding the legend
